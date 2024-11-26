@@ -191,6 +191,14 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		v := ctx.Uint64(utils.OverrideVerkle.Name)
 		cfg.Eth.OverrideVerkle = &v
 	}
+	if ctx.IsSet(utils.ZeroFeeAddressesFlag.Name) {
+		for _, addr := range ctx.StringSlice(utils.ZeroFeeAddressesFlag.Name) {
+			cfg.Eth.ZeroFeeAddresses = append(
+				cfg.Eth.ZeroFeeAddresses,
+				common.HexToAddress(strings.TrimSpace(addr)),
+			)
+		}
+	}
 
 	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
 
