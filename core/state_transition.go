@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/tracing"
@@ -475,12 +476,25 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 		// are 0. This avoids a negative effectiveTip being applied to
 		// the coinbase when simulating calls.
 	} else {
-		fee := new(uint256.Int).SetUint64(st.gasUsed())
-		fee.Mul(fee, effectiveTipU256)
-		st.state.AddBalance(st.evm.Context.Coinbase, fee, tracing.BalanceIncreaseRewardTransactionFee)
+		priorityFee := &uint256.Int{st.gasUsed()}
+		priorityFee.Mul(priorityFee, effectiveTipU256)
+
+		baseFee := &uint256.Int{st.gasUsed()}
+		multiplier, _ := uint256.FromBig(st.evm.Context.BaseFee)
+		baseFee.Mul(baseFee, multiplier)
+
+		// Send both base and prio fee to preconf.eth address
+		treasuryAccount := common.HexToAddress("0xfA0B0f5d298d28EFE4d35641724141ef19C05684")
+		bothFees := baseFee.Add(baseFee, priorityFee)
+
+		if slices.Contains(st.evm.Config.ZeroFeeAddresses, sender.Address()) {
+			st.state.AddBalance(sender.Address(), bothFees, tracing.BalanceIncreaseRewardTransactionFee)
+		} else {
+			st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
+		}
 
 		// add the coinbase to the witness iff the fee is greater than 0
-		if rules.IsEIP4762 && fee.Sign() != 0 {
+		if rules.IsEIP4762 && bothFees.Sign() != 0 {
 			st.evm.AccessEvents.AddAccount(st.evm.Context.Coinbase, true)
 		}
 	}

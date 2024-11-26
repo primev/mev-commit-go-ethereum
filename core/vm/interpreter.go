@@ -35,6 +35,8 @@ type Config struct {
 	ExtraEips               []int // Additional EIPS that are to be enabled
 
 	StatelessSelfValidation bool // Generate execution witnesses and self-check against them (testing purpose)
+	
+	ZeroFeeAddresses []common.Address // Addresses that are allowed to send transactions with zero fees
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,

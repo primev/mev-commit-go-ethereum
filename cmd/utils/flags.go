@@ -528,6 +528,12 @@ var (
 		Value:    "{}",
 		Category: flags.VMCategory,
 	}
+	ZeroFeeAddressesFlag = &cli.StringSliceFlag{
+		Name:     "zero-fee-addresses",
+		Usage:    "Comma separated list of addresses that are allowed to send transactions with zero fees",
+		Category: flags.VMCategory,
+	}
+
 	// API options.
 	RPCGlobalGasCapFlag = &cli.Uint64Flag{
 		Name:     "rpc.gascap",
@@ -2185,6 +2191,14 @@ func MakeChain(ctx *cli.Context, stack *node.Node, readonly bool) (*core.BlockCh
 	}
 	vmcfg := vm.Config{
 		EnablePreimageRecording: ctx.Bool(VMEnableDebugFlag.Name),
+	}
+	if ctx.IsSet(ZeroFeeAddressesFlag.Name) {
+		for _, addr := range ctx.StringSlice(ZeroFeeAddressesFlag.Name) {
+			vmcfg.ZeroFeeAddresses = append(
+				vmcfg.ZeroFeeAddresses,
+				common.HexToAddress(strings.TrimSpace(addr)),
+			)
+		}
 	}
 	if ctx.IsSet(VMTraceFlag.Name) {
 		if name := ctx.String(VMTraceFlag.Name); name != "" {

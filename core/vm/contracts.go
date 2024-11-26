@@ -25,6 +25,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/cloudflare/circl/sign/bls"
 	"github.com/consensys/gnark-crypto/ecc"
 	bls12381 "github.com/consensys/gnark-crypto/ecc/bls12-381"
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fp"
@@ -137,6 +138,9 @@ var PrecompiledContractsPrague = PrecompiledContracts{
 	common.BytesToAddress([]byte{0x11}): &bls12381Pairing{},
 	common.BytesToAddress([]byte{0x12}): &bls12381MapG1{},
 	common.BytesToAddress([]byte{0x13}): &bls12381MapG2{},
+
+	// primev pre-compiles start at 0xf addresses
+	common.BytesToAddress([]byte{0xf0}): &bls12381SignatureVerification{},
 }
 
 var PrecompiledContractsBLS = PrecompiledContractsPrague
@@ -713,6 +717,31 @@ var (
 	errBLS12381G1PointSubgroup             = errors.New("g1 point is not on correct subgroup")
 	errBLS12381G2PointSubgroup             = errors.New("g2 point is not on correct subgroup")
 )
+
+type bls12381SignatureVerification struct{}
+
+// RequiredGas returns the gas required to execute the pre-compiled contract.
+func (c *bls12381SignatureVerification) RequiredGas(input []byte) uint64 {
+	return params.BlsSignVerifyGas
+}
+
+func (c *bls12381SignatureVerification) Run(input []byte) ([]byte, error) {
+	// Input format:
+	// - pubkey (48 bytes) - G1 point
+	// - message (32 bytes) - Hash of the message
+	// - signature (96 bytes) - G2 point
+	if len(input) != 176 {
+		return nil, errBLS12381InvalidInputLength
+	}
+	var pubKey bls.PublicKey[bls.G1]
+	if err := pubKey.UnmarshalBinary(input[:48]); err != nil {
+		return nil, err
+	}
+	if !bls.Verify(&pubKey, input[48:80], input[80:]) {
+		return nil, nil
+	}
+	return input[:48], nil
+}
 
 // bls12381G1Add implements EIP-2537 G1Add precompile.
 type bls12381G1Add struct{}
