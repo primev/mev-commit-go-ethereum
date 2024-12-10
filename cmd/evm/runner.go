@@ -18,6 +18,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,9 +36,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/tracing"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/core/vm/runtime"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/triedb"
@@ -64,6 +65,7 @@ var runCommand = &cli.Command{
 		SenderFlag,
 		ValueFlag,
 		StatDumpFlag,
+		DumpFlag,
 	}, traceFlags),
 }
 
@@ -195,17 +197,8 @@ func timedExec(bench bool, execFunc func() ([]byte, uint64, error)) ([]byte, exe
 }
 
 func runCmd(ctx *cli.Context) error {
-	logconfig := &logger.Config{
-		EnableMemory:     !ctx.Bool(TraceDisableMemoryFlag.Name),
-		DisableStack:     ctx.Bool(TraceDisableStackFlag.Name),
-		DisableStorage:   ctx.Bool(TraceDisableStorageFlag.Name),
-		EnableReturnData: !ctx.Bool(TraceDisableReturnDataFlag.Name),
-		Debug:            ctx.Bool(DebugFlag.Name),
-	}
-
 	var (
 		tracer      *tracing.Hooks
-		debugLogger *logger.StructLogger
 		prestate    *state.StateDB
 		chainConfig *params.ChainConfig
 		sender      = common.BytesToAddress([]byte("sender"))
@@ -214,15 +207,7 @@ func runCmd(ctx *cli.Context) error {
 		blobHashes  []common.Hash  // TODO (MariusVanDerWijden) implement blob hashes in state tests
 		blobBaseFee = new(big.Int) // TODO (MariusVanDerWijden) implement blob fee in state tests
 	)
-	if ctx.Bool(MachineFlag.Name) {
-		tracer = logger.NewJSONLogger(logconfig, os.Stdout)
-	} else if ctx.Bool(DebugFlag.Name) {
-		debugLogger = logger.NewStructLogger(logconfig)
-		tracer = debugLogger.Hooks()
-	} else {
-		debugLogger = logger.NewStructLogger(logconfig)
-	}
-
+	tracer = tracerFromFlags(ctx)
 	initialGas := ctx.Uint64(GasFlag.Name)
 	genesisConfig := new(core.Genesis)
 	genesisConfig.GasLimit = initialGas
@@ -365,12 +350,10 @@ func runCmd(ctx *cli.Context) error {
 	}
 
 	if ctx.Bool(DebugFlag.Name) {
-		if debugLogger != nil {
-			fmt.Fprintln(os.Stderr, "#### TRACE ####")
-			logger.WriteTrace(os.Stderr, debugLogger.StructLogs())
+		if logs := runtimeConfig.State.Logs(); len(logs) > 0 {
+			fmt.Fprintln(os.Stderr, "### LOGS")
+			writeLogs(os.Stderr, logs)
 		}
-		fmt.Fprintln(os.Stderr, "#### LOGS ####")
-		logger.WriteLogs(os.Stderr, runtimeConfig.State.Logs())
 	}
 
 	if bench || ctx.Bool(StatDumpFlag.Name) {
@@ -388,4 +371,17 @@ allocated bytes: %d
 	}
 
 	return nil
+}
+
+// writeLogs writes vm logs in a readable format to the given writer
+func writeLogs(writer io.Writer, logs []*types.Log) {
+	for _, log := range logs {
+		fmt.Fprintf(writer, "LOG%d: %x bn=%d txi=%x\n", len(log.Topics), log.Address, log.BlockNumber, log.TxIndex)
+
+		for i, topic := range log.Topics {
+			fmt.Fprintf(writer, "%08d  %x\n", i, topic)
+		}
+		fmt.Fprint(writer, hex.Dump(log.Data))
+		fmt.Fprintln(writer)
+	}
 }

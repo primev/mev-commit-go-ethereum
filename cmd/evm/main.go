@@ -239,14 +239,24 @@ func tracerFromFlags(ctx *cli.Context) *tracing.Hooks {
 		EnableReturnData: !ctx.Bool(TraceDisableReturnDataFlag.Name),
 	}
 	switch {
-	case ctx.Bool(TraceFlag.Name) && ctx.String(TraceFormatFlag.Name) == "struct":
-		return logger.NewStructLogger(config).Hooks()
-	case ctx.Bool(TraceFlag.Name) && ctx.String(TraceFormatFlag.Name) == "json":
-		return logger.NewJSONLogger(config, os.Stderr)
+	case ctx.Bool(TraceFlag.Name):
+		switch format := ctx.String(TraceFormatFlag.Name); format {
+		case "struct":
+			return logger.NewStreamingStructLogger(config, os.Stderr).Hooks()
+		case "json":
+			return logger.NewJSONLogger(config, os.Stderr)
+		case "md", "markdown":
+			return logger.NewMarkdownLogger(config, os.Stderr).Hooks()
+		default:
+			fmt.Fprintf(os.Stderr, "unknown trace format: %q\n", format)
+			os.Exit(1)
+			return nil
+		}
+	// Deprecated ways of configuring tracing.
 	case ctx.Bool(MachineFlag.Name):
 		return logger.NewJSONLogger(config, os.Stderr)
 	case ctx.Bool(DebugFlag.Name):
-		return logger.NewStructLogger(config).Hooks()
+		return logger.NewStreamingStructLogger(config, os.Stderr).Hooks()
 	default:
 		return nil
 	}
