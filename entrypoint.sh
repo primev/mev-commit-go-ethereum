@@ -5,7 +5,6 @@ GETH_BIN_PATH=${GETH_BIN_PATH:-geth}
 GENESIS_L1_PATH=${GENESIS_L1_PATH:-/genesis.json}
 GETH_VERBOSITY=${GETH_VERBOSITY:-3}
 GETH_LOG_FORMAT=${GETH_LOG_FORMAT:-terminal}
-GETH_LOG_TAGS=${GETH_LOG_TAGS:-}
 GETH_SYNC_MODE=${GETH_SYNC_MODE:-snap}
 GETH_STATE_SCHEME=${GETH_STATE_SCHEME:-path}
 GETH_DATA_DIR=${GETH_DATA_DIR:-/data}
@@ -18,12 +17,6 @@ RPC_PORT="${RPC_PORT:-8545}"
 WS_PORT="${WS_PORT:-8546}"
 BLOCK_SIGNER_PRIVATE_KEY=${BLOCK_SIGNER_PRIVATE_KEY:-""}
 JWT_SECRET=${JWT_SECRET:-13373d9a0257983ad150392d7ddb2f9172c9396b4c450e26af469d123c7aaa5c}
-
-if [ -n "$GETH_LOG_TAGS" ]; then
-    LOG_TAGS_OPTION="--log.tags=$GETH_LOG_TAGS"
-else
-    LOG_TAGS_OPTION=""
-fi
 
 if [ -n "$GETH_ZERO_FEE_ADDRESSES" ]; then
     ZERO_FEE_ADDRESSES="--zero-fee-addresses=$GETH_ZERO_FEE_ADDRESSES"
@@ -43,7 +36,6 @@ if [ "$GETH_NODE_TYPE" = "signer" ]; then
 			"$GETH_BIN_PATH" \
 				--verbosity="$GETH_VERBOSITY" \
 				--log.format="$GETH_LOG_FORMAT" \
-				$LOG_TAGS_OPTION \
 				--nousb \
 				account import \
 				--datadir="$GETH_DATA_DIR" \
@@ -68,7 +60,6 @@ if [ ! -d "$GETH_CHAINDATA_DIR" ]; then
 	"$GETH_BIN_PATH" \
 		--verbosity="$GETH_VERBOSITY" \
 		--log.format="$GETH_LOG_FORMAT" \
-		$LOG_TAGS_OPTION \
 		--nousb \
 		--state.scheme="$GETH_STATE_SCHEME" \
 		--db.engine=pebble \
@@ -101,7 +92,6 @@ if [ "$GETH_NODE_TYPE" = "bootnode" ]; then
 	exec "$GETH_BIN_PATH" \
 		--verbosity="$GETH_VERBOSITY" \
 		--log.format="$GETH_LOG_FORMAT" \
-		$LOG_TAGS_OPTION \
 		$ZERO_FEE_ADDRESSES \
 		--datadir="$GETH_DATA_DIR" \
 		--port 30301 \
@@ -147,7 +137,6 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 	exec "$GETH_BIN_PATH" \
 		--verbosity="$GETH_VERBOSITY" \
 		--log.format="$GETH_LOG_FORMAT" \
-		$LOG_TAGS_OPTION \
 		$ZERO_FEE_ADDRESSES \
 		--datadir="$GETH_DATA_DIR" \
 		--port="$GETH_PORT" \
@@ -202,7 +191,6 @@ elif [ "$GETH_NODE_TYPE" = "member" ]; then
 	exec "$GETH_BIN_PATH" \
 		--verbosity="$GETH_VERBOSITY" \
 		--log.format="$GETH_LOG_FORMAT" \
-		$LOG_TAGS_OPTION \
 		$ZERO_FEE_ADDRESSES \
 		--datadir="$GETH_DATA_DIR" \
 		--port="$GETH_PORT" \
@@ -247,7 +235,6 @@ elif [ "$GETH_NODE_TYPE" = "archive" ]; then
 	exec "$GETH_BIN_PATH" \
 		--verbosity="$GETH_VERBOSITY" \
 		--log.format="$GETH_LOG_FORMAT" \
-		$LOG_TAGS_OPTION \
 		--datadir="$GETH_DATA_DIR" \
 		--port="$GETH_PORT" \
 		--syncmode="${GETH_SYNC_MODE}" \
