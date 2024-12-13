@@ -16,7 +16,7 @@ CHAIN_ID=$(cat "$GENESIS_L1_PATH" | jq -r .config.chainId)
 RPC_PORT="${RPC_PORT:-8545}"
 WS_PORT="${WS_PORT:-8546}"
 BLOCK_SIGNER_PRIVATE_KEY=${BLOCK_SIGNER_PRIVATE_KEY:-""}
-JWT_SECRET=${JWT_SECRET:-13373d9a0257983ad150392d7ddb2f9172c9396b4c450e26af469d123c7aaa5c}
+JWT_SECRET=${JWT_SECRET:-"13373d9a0257983ad150392d7ddb2f9172c9396b4c450e26af469d123c7aaa5c"}
 
 if [ -n "$GETH_ZERO_FEE_ADDRESSES" ]; then
     ZERO_FEE_ADDRESSES="--zero-fee-addresses=$GETH_ZERO_FEE_ADDRESSES"
@@ -178,7 +178,7 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
 		--gpo.maxprice=500000000000 \
-		--authrpc.jwtsecret ./geth-setup/jwt.hex \
+		--authrpc.jwtsecret $GETH_DATA_DIR/jwt.hex \
 		--authrpc.port 8551 \
 		"$NAT_FLAG"
 
