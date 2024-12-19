@@ -15,6 +15,7 @@ GETH_ZERO_FEE_ADDRESSES=${GETH_ZERO_FEE_ADDRESSES:-}
 CHAIN_ID=$(cat "$GENESIS_L1_PATH" | jq -r .config.chainId)
 RPC_PORT="${RPC_PORT:-8545}"
 WS_PORT="${WS_PORT:-8546}"
+RPC_ENGINE_PORT="${RPC_ENGINE_PORT:-8551}"
 BLOCK_SIGNER_PRIVATE_KEY=${BLOCK_SIGNER_PRIVATE_KEY:-""}
 JWT_SECRET=${JWT_SECRET:-"13373d9a0257983ad150392d7ddb2f9172c9396b4c450e26af469d123c7aaa5c"}
 
@@ -126,7 +127,9 @@ if [ "$GETH_NODE_TYPE" = "bootnode" ]; then
 		--miner.gasprice=1000000000 \
 		--miner.recommit=300ms \
 		--gpo.maxprice=500000000000 \
-
+		--authrpc.addr="$NODE_IP" \
+		--authrpc.jwtsecret $GETH_DATA_DIR/jwt.hex 
+		
 elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 	echo "Starting signer node"
 	echo "$NODE_KEY" > $GETH_DATA_DIR/nodekey
@@ -174,7 +177,7 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 		--ws.api=debug,eth,txpool,net,engine \
 		--rpc.allow-unprotected-txs \
 		--authrpc.addr="$NODE_IP" \
-		--authrpc.port="8551" \
+		--authrpc.port="$RPC_ENGINE_PORT" \
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
@@ -222,7 +225,7 @@ elif [ "$GETH_NODE_TYPE" = "member" ]; then
 		--ws.api=debug,eth,txpool,net,engine \
 		--rpc.allow-unprotected-txs \
 		--authrpc.addr="$NODE_IP" \
-		--authrpc.port="8551" \
+		--authrpc.port="$RPC_ENGINE_PORT" \
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
