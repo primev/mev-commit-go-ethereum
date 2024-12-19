@@ -124,6 +124,7 @@ if [ "$GETH_NODE_TYPE" = "bootnode" ]; then
 		--txpool.accountqueue=512 \
 		--rpc.allow-unprotected-txs \
 		--miner.gasprice=1000000000 \
+		--miner.recommit=300ms \
 		--gpo.maxprice=500000000000 \
 
 elif [ "$GETH_NODE_TYPE" = "signer" ]; then
@@ -177,9 +178,9 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
+		--miner.recommit=300ms \
 		--gpo.maxprice=500000000000 \
 		--authrpc.jwtsecret $GETH_DATA_DIR/jwt.hex \
-		--authrpc.port 8551 \
 		"$NAT_FLAG"
 
 elif [ "$GETH_NODE_TYPE" = "member" ]; then
@@ -225,6 +226,7 @@ elif [ "$GETH_NODE_TYPE" = "member" ]; then
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
+		--miner.recommit=300ms \
 		--gpo.maxprice=500000000000 \
 		"$NAT_FLAG"
 elif [ "$GETH_NODE_TYPE" = "archive" ]; then
@@ -269,6 +271,7 @@ elif [ "$GETH_NODE_TYPE" = "archive" ]; then
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
+		--miner.recommit=300ms \
 		--gpo.maxprice=500000000000 \
 		"$NAT_FLAG"
 else
