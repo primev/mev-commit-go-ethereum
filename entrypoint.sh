@@ -270,7 +270,7 @@ elif [ "$GETH_NODE_TYPE" = "archive" ]; then
 		--ws.api=debug,eth,txpool,net,engine \
 		--rpc.allow-unprotected-txs \
 		--authrpc.addr="$NODE_IP" \
-		--authrpc.port="8551" \
+		--authrpc.port="$RPC_ENGINE_PORT" \
 		--authrpc.vhosts="*" \
 		--txpool.accountqueue=512 \
 		--miner.gasprice=1000000000 \
