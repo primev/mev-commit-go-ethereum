@@ -110,7 +110,6 @@ if [ "$GETH_NODE_TYPE" = "bootnode" ]; then
 		--syncmode="${GETH_SYNC_MODE}" \
 		--gcmode=full \
 		--state.scheme="$GETH_STATE_SCHEME" \
-		--db.engine=pebble \
 		--networkid=$CHAIN_ID \
 		--nousb \
 		--metrics \
@@ -146,7 +145,6 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 		--syncmode="${GETH_SYNC_MODE}" \
 		--gcmode=full \
 		--state.scheme="$GETH_STATE_SCHEME" \
-		--db.engine=pebble \
 		--http \
 		--http.corsdomain="*" \
 		--http.vhosts="*" \
