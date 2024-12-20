@@ -135,7 +135,6 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 	echo "$NODE_KEY" > $GETH_DATA_DIR/nodekey
 	echo "$JWT_SECRET" > $GETH_DATA_DIR/jwt.hex
 
-	echo "BOOTNODE_ENDPOINT is set to: $BOOTNODE_ENDPOINT"
 	GETH_PORT="${GETH_PORT:-30311}"
 
 	exec "$GETH_BIN_PATH" \
@@ -154,7 +153,6 @@ elif [ "$GETH_NODE_TYPE" = "signer" ]; then
 		--http.addr="$NODE_IP" \
 		--http.port="$RPC_PORT" \
 		--http.api=web3,debug,eth,txpool,net,engine \
-		--bootnodes $BOOTNODE_ENDPOINT \
 		--networkid=$CHAIN_ID \
 		--unlock=$BLOCK_SIGNER_ADDRESS \
 		--password="$GETH_DATA_DIR"/password \
