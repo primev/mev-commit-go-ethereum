@@ -63,7 +63,6 @@ if [ ! -d "$GETH_CHAINDATA_DIR" ]; then
 		--log.format="$GETH_LOG_FORMAT" \
 		--nousb \
 		--state.scheme="$GETH_STATE_SCHEME" \
-		--db.engine=pebble \
 		--datadir="$GETH_DATA_DIR" init \
 		"$GENESIS_L1_PATH"
 else
