@@ -531,10 +531,10 @@ func (st *stateTransition) execute() (*ExecutionResult, error) {
 			st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
 		}
 
-		// add the coinbase to the witness iff the fee is greater than 0
-		if rules.IsEIP4762 && bothFees.Sign() != 0 {
-			st.evm.AccessEvents.AddAccount(st.evm.Context.Coinbase, true)
-		}
+		// // add the coinbase to the witness iff the fee is greater than 0
+		// if rules.IsEIP4762 && bothFees.Sign() != 0 {
+		// 	st.evm.AccessEvents.AddAccount(st.evm.Context.Coinbase, true)
+		// }
 	}
 
 	return &ExecutionResult{
