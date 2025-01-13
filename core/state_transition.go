@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/tracing"
@@ -524,11 +523,11 @@ func (st *stateTransition) execute() (*ExecutionResult, error) {
 		treasuryAccount := common.HexToAddress("0xfA0B0f5d298d28EFE4d35641724141ef19C05684")
 		bothFees := baseFee.Add(baseFee, priorityFee)
 
-		if slices.Contains(st.evm.Config.ZeroFeeAddresses, sender.Address()) {
-			st.state.AddBalance(sender.Address(), bothFees, tracing.BalanceIncreaseRewardTransactionFee)
-		} else {
-			st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
-		}
+		// if slices.Contains(st.evm.Config.ZeroFeeAddresses, sender.Address()) {
+		// 	st.state.AddBalance(sender.Address(), bothFees, tracing.BalanceIncreaseRewardTransactionFee)
+		// } else {
+		st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
+		// }
 
 		// add the coinbase to the witness iff the fee is greater than 0
 		// if rules.IsEIP4762 && fee.Sign() != 0 {
