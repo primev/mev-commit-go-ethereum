@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 	"sync/atomic"
 	"time"
 
@@ -140,9 +141,10 @@ func (miner *Miner) generateWork(params *generateParams, witness bool) *newPaylo
 	if err != nil {
 		return &newPayloadResult{err: err}
 	}
+	zeroFeeAddrs := miner.chain.GetVMConfig().ZeroFeeAddresses
 	return &newPayloadResult{
 		block:    block,
-		fees:     totalFees(block, work.receipts),
+		fees:     totalFees(zeroFeeAddrs, block, work.receipts),
 		sidecars: work.sidecars,
 		stateDB:  work.state,
 		receipts: work.receipts,
@@ -473,11 +475,19 @@ func (miner *Miner) fillTransactions(interrupt *atomic.Int32, env *environment) 
 }
 
 // totalFees computes total consumed miner fees in Wei. Block transactions and receipts have to have the same order.
-func totalFees(block *types.Block, receipts []*types.Receipt) *big.Int {
+func totalFees(zeroFeeAddrs []common.Address, block *types.Block, receipts []*types.Receipt) *big.Int {
 	feesWei := new(big.Int)
 	for i, tx := range block.Transactions() {
-		minerFee, _ := tx.EffectiveGasTip(block.BaseFee())
-		feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), minerFee))
+		signer := types.LatestSignerForChainID(tx.ChainId())
+
+		from, err := types.Sender(signer, tx)
+		if err != nil {
+			log.Error("Failed to extract sender from transaction", "err", err)
+		}
+		if !slices.Contains(zeroFeeAddrs, from) {
+			minerFee, _ := tx.EffectiveGasTip(block.BaseFee())
+			feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), minerFee))
+		}
 	}
 	return feesWei
 }
