@@ -524,22 +524,18 @@ func (st *stateTransition) execute() (*ExecutionResult, error) {
 		// fee.Mul(fee, effectiveTipU256)
 		// st.state.AddBalance(st.evm.Context.Coinbase, fee, tracing.BalanceIncreaseRewardTransactionFee)
 
-		priorityFee := &uint256.Int{st.gasUsed()}
-		priorityFee.Mul(priorityFee, effectiveTipU256)
+		if !slices.Contains(st.evm.Config.ZeroFeeAddresses, msg.From) {
+			priorityFee := &uint256.Int{st.gasUsed()}
+			priorityFee.Mul(priorityFee, effectiveTipU256)
 
-		baseFee := &uint256.Int{st.gasUsed()}
-		multiplier, _ := uint256.FromBig(st.evm.Context.BaseFee)
-		baseFee.Mul(baseFee, multiplier)
+			baseFee := &uint256.Int{st.gasUsed()}
+			multiplier, _ := uint256.FromBig(st.evm.Context.BaseFee)
+			baseFee.Mul(baseFee, multiplier)
 
-		treasuryAccount := common.HexToAddress("0xfA0B0f5d298d28EFE4d35641724141ef19C05684")
-		bothFees := baseFee.Add(baseFee, priorityFee)
-
-		// if slices.Contains(st.evm.Config.ZeroFeeAddresses, sender.Address()) {
-		// 	st.state.AddBalance(sender.Address(), bothFees, tracing.BalanceIncreaseRewardTransactionFee)
-		// } else {
-		st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
-		// }
-
+			treasuryAccount := common.HexToAddress("0xfA0B0f5d298d28EFE4d35641724141ef19C05684")
+			bothFees := baseFee.Add(baseFee, priorityFee)
+			st.state.AddBalance(treasuryAccount, bothFees, tracing.BalanceIncreaseRewardTransactionFee)
+		}
 		// add the coinbase to the witness iff the fee is greater than 0
 		// if rules.IsEIP4762 && fee.Sign() != 0 {
 		// 	st.evm.AccessEvents.AddAccount(st.evm.Context.Coinbase, true)
