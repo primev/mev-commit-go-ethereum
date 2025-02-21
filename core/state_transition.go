@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/tracing"
@@ -246,6 +247,16 @@ func (st *stateTransition) to() common.Address {
 }
 
 func (st *stateTransition) buyGas() error {
+	if slices.Contains(st.evm.Config.ZeroFeeAddresses, st.msg.From) {
+		if err := st.gp.SubGas(st.msg.GasLimit); err != nil {
+			return err
+		}
+		st.gasRemaining += st.msg.GasLimit
+		st.initialGas = st.msg.GasLimit
+		// Do not subtract any balance from the sender.
+		return nil
+	}
+
 	mgval := new(big.Int).SetUint64(st.msg.GasLimit)
 	mgval.Mul(mgval, st.msg.GasPrice)
 	balanceCheck := new(big.Int).Set(mgval)
