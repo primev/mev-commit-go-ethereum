@@ -499,12 +499,16 @@ func (st *stateTransition) execute() (*ExecutionResult, error) {
 	}
 
 	var gasRefund uint64
-	if !rules.IsLondon {
-		// Before EIP-3529: refunds were capped to gasUsed / 2
-		gasRefund = st.refundGas(params.RefundQuotient)
+	if slices.Contains(st.evm.Config.ZeroFeeAddresses, msg.From) {
+		// For zero-fee addresses, skip refund balance addition.
+		st.gp.AddGas(st.gasRemaining)
+		gasRefund = 0
 	} else {
-		// After EIP-3529: refunds are capped to gasUsed / 5
-		gasRefund = st.refundGas(params.RefundQuotientEIP3529)
+		if !rules.IsLondon {
+			gasRefund = st.refundGas(params.RefundQuotient)
+		} else {
+			gasRefund = st.refundGas(params.RefundQuotientEIP3529)
+		}
 	}
 	effectiveTip := msg.GasPrice
 	if rules.IsLondon {
