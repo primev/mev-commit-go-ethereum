@@ -29,7 +29,7 @@ var (
 
 	// ErrFutureBlock is returned when a block's timestamp is in the future according
 	// to the current node.
-	ErrFutureBlock = errors.New("block in the futuree")
+	ErrFutureBlock = errors.New("block in the future")
 
 	// ErrInvalidNumber is returned if a block's number doesn't equal its parent's
 	// plus one.
